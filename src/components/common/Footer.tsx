@@ -145,8 +145,8 @@ export default function Footer() {
             <Link href="/reservation" className="hover:text-gray-300 transition-colors">
               Reservations
             </Link>
-            <Link href="/admin" className="text-[#D4AF37] hover:underline transition-colors font-medium">
-              Admin Portal
+            <Link href="/contact" className="hover:text-gray-300 transition-colors">
+              Contact
             </Link>
           </div>
         </div>

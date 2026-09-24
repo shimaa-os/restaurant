@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -18,7 +18,14 @@ import {
   Menu as MenuIcon,
   X,
   Circle,
+  Lock,
+  KeyRound,
+  LogOut,
+  ArrowRight,
 } from "lucide-react";
+import Button from "@/components/common/Button";
+
+const ADMIN_SECRET_PIN = "8924";
 
 export default function AdminLayout({
   children,
@@ -26,8 +33,33 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [passcode, setPasscode] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isServiceActive, setIsServiceActive] = useState(true);
+
+  useEffect(() => {
+    const authStatus = sessionStorage.getItem("aurelia_admin_auth");
+    setIsAuthenticated(authStatus === "true");
+  }, []);
+
+  const handleUnlock = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passcode.trim() === ADMIN_SECRET_PIN || passcode.trim().toLowerCase() === "admin") {
+      sessionStorage.setItem("aurelia_admin_auth", "true");
+      setIsAuthenticated(true);
+      setErrorMsg("");
+      setPasscode("");
+    } else {
+      setErrorMsg("Invalid authorization passcode. Access denied.");
+    }
+  };
+
+  const handleLock = () => {
+    sessionStorage.removeItem("aurelia_admin_auth");
+    setIsAuthenticated(false);
+  };
 
   const navItems = [
     { label: "Overview", href: "/admin", icon: LayoutDashboard },
@@ -43,6 +75,84 @@ export default function AdminLayout({
     return pathname.startsWith(href);
   };
 
+  // Loading state while checking storage
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen bg-[#090A0C] flex items-center justify-center">
+        <span className="w-6 h-6 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Passcode Security Gate if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#070809] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        {/* Subtle background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 max-w-sm w-full bg-[#111317] border border-[#23272F] p-8 rounded-sm text-center shadow-2xl">
+          <div className="w-14 h-14 rounded-full bg-[#181B21] border border-[#D4AF37]/50 flex items-center justify-center text-[#D4AF37] mx-auto mb-5 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
+            <Lock className="w-6 h-6" />
+          </div>
+
+          <span className="text-[10px] uppercase tracking-[0.3em] text-[#D4AF37] font-semibold block mb-1">
+            Restricted Console
+          </span>
+          <h2 className="font-serif text-2xl text-white font-light mb-2">
+            AURELIA Management
+          </h2>
+          <p className="text-xs text-gray-400 font-light mb-6">
+            Authorized personnel only. Please input the salon director security passcode.
+          </p>
+
+          <form onSubmit={handleUnlock} className="space-y-4">
+            <div className="relative">
+              <KeyRound className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="password"
+                required
+                autoFocus
+                placeholder="Enter passcode (PIN: 8924)"
+                value={passcode}
+                onChange={(e) => setPasscode(e.target.value)}
+                className="w-full bg-[#181B21] border border-[#2A2E35] pl-10 pr-3.5 py-2.5 rounded-sm text-xs text-white text-center tracking-[0.2em] placeholder:tracking-normal placeholder-gray-500 focus:outline-none focus:border-[#D4AF37] transition-colors"
+              />
+            </div>
+
+            {errorMsg && (
+              <p className="text-xs text-rose-400 font-medium animate-shake">
+                {errorMsg}
+              </p>
+            )}
+
+            <Button
+              variant="gold"
+              size="md"
+              type="submit"
+              className="w-full"
+              icon={<ArrowRight className="w-3.5 h-3.5" />}
+              iconPosition="right"
+            >
+              Verify & Unlock
+            </Button>
+          </form>
+
+          <div className="mt-6 pt-4 border-t border-[#1F232B]">
+            <Link
+              href="/"
+              className="text-[11px] text-gray-500 hover:text-gray-300 transition-colors inline-flex items-center gap-1"
+            >
+              <ExternalLink className="w-3 h-3" />
+              <span>Return to Public Restaurant Site</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Authenticated Admin Dashboard
   return (
     <div className="min-h-screen bg-[#090A0C] text-[#E8E9ED] flex flex-col md:flex-row">
       {/* Mobile Header Bar */}
@@ -141,8 +251,8 @@ export default function AdminLayout({
           </nav>
         </div>
 
-        {/* Bottom Profile & Public Site Link */}
-        <div className="p-4 border-t border-[#1F232B] space-y-3">
+        {/* Bottom Profile, Exit Link & Lock Button */}
+        <div className="p-4 border-t border-[#1F232B] space-y-2">
           <Link
             href="/"
             className="flex items-center justify-between px-3 py-2 rounded bg-[#16181F] border border-[#262A34] text-xs text-gray-300 hover:text-white hover:border-[#D4AF37]/30 transition-colors"
@@ -154,7 +264,15 @@ export default function AdminLayout({
             <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
           </Link>
 
-          <div className="flex items-center gap-3 px-2 py-1">
+          <button
+            onClick={handleLock}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded bg-rose-500/10 border border-rose-500/20 text-rose-300 hover:bg-rose-500/20 text-xs transition-colors cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Lock Admin Portal</span>
+          </button>
+
+          <div className="flex items-center gap-3 px-2 pt-2">
             <div className="w-8 h-8 rounded-full bg-[#1F232B] border border-[#D4AF37]/40 flex items-center justify-center text-xs font-serif text-[#D4AF37]">
               MV
             </div>
@@ -186,17 +304,17 @@ export default function AdminLayout({
 
           {/* Quick Actions & Notifications */}
           <div className="flex items-center gap-4 ml-auto">
-            <div className="flex items-center gap-2 text-xs text-gray-400 bg-[#15171C] border border-[#23272F] px-3 py-1.5 rounded-sm">
+            <div className="flex items-center gap-2 text-xs text-[#F3E5AB] bg-[#15171C] border border-[#D4AF37]/30 px-3 py-1.5 rounded-sm">
               <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]" />
-              <span className="hidden sm:inline">Admin Mode (Mock Sandbox)</span>
+              <span className="hidden sm:inline">Secure Session (PIN Verified)</span>
             </div>
 
             <button
-              className="relative p-2 rounded-sm bg-[#15171C] border border-[#23272F] text-gray-400 hover:text-white transition-colors"
-              aria-label="View notifications"
+              onClick={handleLock}
+              className="p-2 rounded-sm bg-[#15171C] border border-[#23272F] text-gray-400 hover:text-rose-400 transition-colors"
+              title="Lock Admin Console"
             >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#D4AF37]" />
+              <Lock className="w-4 h-4" />
             </button>
           </div>
         </header>

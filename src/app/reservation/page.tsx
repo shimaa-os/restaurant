@@ -175,9 +175,9 @@ export default function ReservationPage() {
               >
                 Modify Reservation
               </Button>
-              <Link href="/admin/reservations">
+              <Link href="/menu">
                 <Button variant="gold" size="md">
-                  View in Admin Portal
+                  Explore Tasting Menu
                 </Button>
               </Link>
             </div>

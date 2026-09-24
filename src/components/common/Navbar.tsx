@@ -26,13 +26,18 @@ export default function Navbar() {
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
-  const navLinks = [
+  interface NavItem {
+    label: string;
+    href: string;
+    badge?: string;
+  }
+
+  const navLinks: NavItem[] = [
     { label: "Home", href: "/" },
     { label: "Menu", href: "/menu" },
     { label: "Story", href: "/about" },
     { label: "Reserve", href: "/reservation" },
     { label: "Contact", href: "/contact" },
-    { label: "Admin", href: "/admin", badge: "Live" },
   ];
 
   const isActive = (href: string) => {

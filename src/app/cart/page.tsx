@@ -148,9 +148,9 @@ export default function CartPage() {
                   Order More Dishes
                 </Button>
               </Link>
-              <Link href="/admin/orders" className="flex-1">
+              <Link href="/" className="flex-1">
                 <Button variant="outline" size="md" className="w-full">
-                  View in Admin Dashboard
+                  Return to Home
                 </Button>
               </Link>
             </div>
